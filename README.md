@@ -28,55 +28,77 @@ KaliMind is split into a robust two-part architecture to ensure the AI's reasoni
 
 ```mermaid
 graph TD
-    %% Define Nodes
-    Human(["👤 Human Operator"])
-    LLM{{"🧠 LLM / AI Agent <br> (e.g., Claude)"}}
-    MCP_Client["🔌 kalimind_mcp.py <br> (Local Machine)"]
-    Backend["⚙️ kalimind_backend.py <br> (Kali Linux VM)"]
-    pentest_tools["🛠️ OS Security Tools <br> (Nmap, Metasploit, etc.)"]
-    Target[("🎯 Target Infrastructure")]
-    Report(["📄 Final Pentest Report"])
-
-    %% Define flow
-    Human -- "1. Provides Scope & Objective \n(e.g., 'Assess 10.0.0.5')" --> LLM
+    %% Define Nodes with enhanced styling semantics
+    Human(["👤 Human Operator<br/>(Sets Objectives)"])
     
-    subgraph Cognitive Loop [Intelligence & Reasoning Loop]
-        LLM -- "2. Formulates Strategy & Chooses Tool" --> Action
-        Action{Tool Execution}
-        Action -- "3. Invokes MCP Tool Format" --> MCP_Client
-        
-        MCP_Client -- "4. Sends HTTP POST Request" --> Backend
-        Backend -- "5. Spawns Asynchronous Shell Process" --> pentest_tools
-        
-        pentest_tools -- "6. Executes Attack/Scan" --> Target
-        Target -. "7. Raw stdout/stderr Results" .-> pentest_tools
-        
-        pentest_tools -- "8. Captures Execution Output" --> Backend
-        Backend -- "9. Returns JSON Response" --> MCP_Client
-        MCP_Client -- "10. Feeds Context Back" --> LLM
-        
-        LLM -- "11. Analyzes Vulnerability Data" --> Decision{Vulnerable?}
-        Decision -- "Yes: Exploit/Enumerate Further" --> Action
-        Decision -- "No: Try Different Vector" --> Action
+    subgraph "Local Execution Environment"
+        LLM{{"🧠 Large Language Model<br/>(Claude / Copilot)"}}
+        MCP_Client["🔌 kalimind_mcp.py<br/>(MCP Python Client)"]
+        ContextDB[("🗄️ Context & History<br/>(LLM Memory)")]
     end
     
-    Decision -- "12. Assessment Complete" --> Generate
-    Generate{Synthesis} -- "13. Compiles Findings" --> Report
-    Report -. "14. Delivers Final Output" .-> Human
-
-    %% Styling
-    classDef primary fill:#2a9d8f,stroke:#264653,stroke-width:2px,color:#fff;
-    classDef secondary fill:#e9c46a,stroke:#e76f51,stroke-width:2px,color:#333;
-    classDef backend fill:#e76f51,stroke:#d62828,stroke-width:2px,color:#fff;
-    classDef decision fill:#264653,stroke:#2a9d8f,stroke-width:2px,color:#fff;
+    subgraph "Kali Linux Pentesting Backend"
+        API_Server{"🌐 kalimind_backend.py<br/>(Flask REST API)"}
+        Command_Executor["⚙️ Command Executor<br/>(Async Subprocesses)"]
+        
+        subgraph "Tool Arsenal"
+            Tool_Recon["🔍 Recon & Scanning<br/>(Nmap, Dirb, Gobuster)"]
+            Tool_Exploit["💥 Exploitation<br/>(Metasploit, SQLMap)"]
+            Tool_Crack["🔓 Cracking<br/>(Hydra, John)"]
+        end
+    end
     
-    class LLM primary;
-    class Target secondary;
-    class Backend backend;
-    class pentest_tools backend;
-    class MCP_Client primary;
-    class Decision decision;
-    class Action decision;
+    Target[("🎯 Target Infrastructure<br/>(IPs, Domains, Web Apps)")]
+    Report(["📄 Formatted Security Report"])
+
+    %% Define Flow Connections
+    Human -- "1. Natural Language Prompt\n('Run a full scan on 10.0.0.5')" --> LLM
+    
+    %% Cognitive loop and tool preparation
+    LLM <--> |"2. Recalls Target State\n& Previous Findings"| ContextDB
+    LLM -- "3. Determines Required Tool\n& Generates MCP JSON Payload\n(e.g. nmap_scan)" --> MCP_Client
+    
+    %% Network Boundary
+    MCP_Client -- "4. Translates MCP to HTTP POST\n(Network Request to Port 5000)" --> API_Server
+    
+    %% Backend routing
+    API_Server -- "5. Validates Request & Routes\nTo Specific Subprocess" --> Command_Executor
+    
+    Command_Executor -.-> |"Executes `nmap -sV -p-`"| Tool_Recon
+    Command_Executor -.-> |"Generates `.rc` & runs `msfconsole`"| Tool_Exploit
+    Command_Executor -.-> |"Runs `hydra -l admin ...`"| Tool_Crack
+    
+    %% Target Interaction
+    Tool_Recon == "6. Network Traffic \n(Probes & Payloads)" ==> Target
+    Tool_Exploit == "6. Network Traffic \n(Probes & Payloads)" ==> Target
+    Tool_Crack == "6. Network Traffic \n(Probes & Payloads)" ==> Target
+    
+    %% Response Gathering
+    Target -. "7. Raw Response Data\n(stdout/stderr streams)" .-> Command_Executor
+    
+    %% Data Return Path
+    Command_Executor -- "8. Buffer Collected & Parsed" --> API_Server
+    API_Server -- "9. JSON Execution Results" --> MCP_Client
+    MCP_Client -- "10. Results Ingested into Context" --> LLM
+    
+    %% Final Synthesis
+    LLM -- "11. Analyzes Outputs\nDecides Next Actions or Completes Task" --> Report
+    Report -. "12. Delivers Actionable Insights" .-> Human
+
+    %% Node Styling Definitions
+    classDef user fill:#2a9d8f,stroke:#264653,stroke-width:3px,color:#fff,rx:10,ry:10;
+    classDef llm fill:#e9c46a,stroke:#e76f51,stroke-width:3px,color:#333;
+    classDef middleware fill:#f4a261,stroke:#e76f51,stroke-width:2px,color:#fff;
+    classDef backend fill:#e76f51,stroke:#d62828,stroke-width:3px,color:#fff;
+    classDef toolkit fill:#264653,stroke:#2a9d8f,stroke-width:2px,color:#fff,rx:5,ry:5;
+    classDef memory fill:#8ab17d,stroke:#5c8052,stroke-width:2px,color:#fff;
+
+    class Human,Report user;
+    class LLM llm;
+    class MCP_Client,ContextDB memory;
+    class API_Server,Command_Executor backend;
+    class Tool_Recon,Tool_Exploit,Tool_Crack toolkit;
+    class Target user;
 ```
 
 ### 1. `kalimind_backend.py` (The Execution Engine)
