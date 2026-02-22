@@ -29,13 +29,13 @@ KaliMind is split into a robust two-part architecture to ensure the AI's reasoni
 ```mermaid
 graph TD
     %% Define Nodes
-    Human([👤 Human Operator])
-    LLM{{🧠 LLM / AI Agent <br> (e.g., Claude)}}
-    MCP_Client[🔌 kalimind_mcp.py <br> (Local Machine)]
-    Backend[⚙️ kalimind_backend.py <br> (Kali Linux VM)]
-    pentest_tools[🛠️ OS Security Tools <br> (Nmap, Metasploit, etc.)]
-    Target[(🎯 Target Infrastructure)]
-    Report([📄 Final Pentest Report])
+    Human(["👤 Human Operator"])
+    LLM{{"🧠 LLM / AI Agent <br> (e.g., Claude)"}}
+    MCP_Client["🔌 kalimind_mcp.py <br> (Local Machine)"]
+    Backend["⚙️ kalimind_backend.py <br> (Kali Linux VM)"]
+    pentest_tools["🛠️ OS Security Tools <br> (Nmap, Metasploit, etc.)"]
+    Target[("🎯 Target Infrastructure")]
+    Report(["📄 Final Pentest Report"])
 
     %% Define flow
     Human -- "1. Provides Scope & Objective \n(e.g., 'Assess 10.0.0.5')" --> LLM
