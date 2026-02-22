@@ -27,32 +27,56 @@ Traditional security scanners run scripts and flag potential issues based on rig
 KaliMind is split into a robust two-part architecture to ensure the AI's reasoning engine remains cleanly separated from the dangerous execution environment.
 
 ```mermaid
-sequenceDiagram
-    participant User as Human Operator
-    participant LLM as AI Agent (e.g., Claude)
-    participant MCP as kalimind_mcp.py (Client)
-    participant Backend as kalimind_backend.py (Kali VM)
-    participant Target as Target Infrastructure
+graph TD
+    %% Define Nodes
+    Human([👤 Human Operator])
+    LLM{{🧠 LLM / AI Agent <br> (e.g., Claude)}}
+    MCP_Client[🔌 kalimind_mcp.py <br> (Local Machine)]
+    Backend[⚙️ kalimind_backend.py <br> (Kali Linux VM)]
+    pentest_tools[🛠️ OS Security Tools <br> (Nmap, Metasploit, etc.)]
+    Target[(🎯 Target Infrastructure)]
+    Report([📄 Final Pentest Report])
 
-    User->>LLM: "Assess vulnerabilities on 10.0.0.5"
-    Note over LLM: LLM formulates a reconnaissance plan
-    LLM->>MCP: Invokes tool `nmap_scan(10.0.0.5)`
-    MCP->>Backend: HTTP POST /api/tools/nmap
-    Backend->>Target: Executes actual `nmap -sV 10.0.0.5`
-    Target-->>Backend: Returns open ports (e.g., Port 80)
-    Backend-->>MCP: JSON Response with raw stdout
-    MCP-->>LLM: Returns text to LLM context
+    %% Define flow
+    Human -- "1. Provides Scope & Objective \n(e.g., 'Assess 10.0.0.5')" --> LLM
     
-    Note over LLM: LLM analyzes open Port 80
-    LLM->>MCP: Invokes `gobuster_scan(http://10.0.0.5)`
-    MCP->>Backend: HTTP POST /api/tools/gobuster
-    Backend->>Target: Executes `gobuster dir -u ...`
-    Target-->>Backend: Returns hidden /admin-panel
-    Backend-->>MCP: JSON Response 
-    MCP-->>LLM: Returns discovered directories
+    subgraph Cognitive Loop [Intelligence & Reasoning Loop]
+        LLM -- "2. Formulates Strategy & Chooses Tool" --> Action
+        Action{Tool Execution}
+        Action -- "3. Invokes MCP Tool Format" --> MCP_Client
+        
+        MCP_Client -- "4. Sends HTTP POST Request" --> Backend
+        Backend -- "5. Spawns Asynchronous Shell Process" --> pentest_tools
+        
+        pentest_tools -- "6. Executes Attack/Scan" --> Target
+        Target -. "7. Raw stdout/stderr Results" .-> pentest_tools
+        
+        pentest_tools -- "8. Captures Execution Output" --> Backend
+        Backend -- "9. Returns JSON Response" --> MCP_Client
+        MCP_Client -- "10. Feeds Context Back" --> LLM
+        
+        LLM -- "11. Analyzes Vulnerability Data" --> Decision{Vulnerable?}
+        Decision -- "Yes: Exploit/Enumerate Further" --> Action
+        Decision -- "No: Try Different Vector" --> Action
+    end
     
-    Note over LLM: LLM decides to attempt exploitation
-    LLM->>User: "Found an exposed admin panel. Attempting default credentials..."
+    Decision -- "12. Assessment Complete" --> Generate
+    Generate{Synthesis} -- "13. Compiles Findings" --> Report
+    Report -. "14. Delivers Final Output" .-> Human
+
+    %% Styling
+    classDef primary fill:#2a9d8f,stroke:#264653,stroke-width:2px,color:#fff;
+    classDef secondary fill:#e9c46a,stroke:#e76f51,stroke-width:2px,color:#333;
+    classDef backend fill:#e76f51,stroke:#d62828,stroke-width:2px,color:#fff;
+    classDef decision fill:#264653,stroke:#2a9d8f,stroke-width:2px,color:#fff;
+    
+    class LLM primary;
+    class Target secondary;
+    class Backend backend;
+    class pentest_tools backend;
+    class MCP_Client primary;
+    class Decision decision;
+    class Action decision;
 ```
 
 ### 1. `kalimind_backend.py` (The Execution Engine)
